@@ -112,7 +112,7 @@ foreach ($tenant in $tenants) {
                                             
     # Return the results
 
-    $QueryResults
+    #$QueryResults
 
 
     #Remove special chars from header
