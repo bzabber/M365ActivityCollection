@@ -118,14 +118,14 @@ foreach ($tenant in $tenants) {
     #Remove special chars from header
     $QueryResults = $QueryResults.Replace('ï»¿Report Refresh Date', 'Report Refresh Date')
     #Convert the stream result to an array
+    Add-Member -InputObject $QueryResults -MemberType NoteProperty -Name "Tenant: " -Value $tenantName
     $resultarray = ConvertFrom-Csv -InputObject $QueryResults
     ConvertTo-Json $resultarray
-    $json = Get-Content $resultarray | Out-String | ConvertFrom-Json
-  
-    $json | Add-Member -Type NoteProperty -Name 'Tenant:' -Value $tenantName
+    #$json = Get-Content $resultarray | Out-String | ConvertFrom-Json
+    #$json | Add-Member -Type NoteProperty -Name 'Tenant:' -Value $tenantName
     #$json
-    $json | ConvertTo-Json | set-content $json
-    $json
+    #$json | ConvertTo-Json | set-content $json
+    $resultarray
     #Export result to CSV
     #Write-Host $resultarray
     #$resultarray | Export-Csv "C:\temp\EmailActivityCount.csv" -NoTypeInformation
