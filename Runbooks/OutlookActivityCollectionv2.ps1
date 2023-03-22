@@ -120,6 +120,10 @@ foreach ($tenant in $tenants) {
     #Convert the stream result to an array
     $resultarray = ConvertFrom-Csv -InputObject $QueryResults
     ConvertTo-Json $resultarray
+    $json = Get-Content $resultarray | Out-String | ConvertFrom-Json
+    $json | Add-Member -Type NoteProperty -Name 'Tenant:' -Value $tenantName
+    $json | ConvertTo-Json | set-content $resultarray
+    $resultarray
     #Export result to CSV
     #Write-Host $resultarray
     #$resultarray | Export-Csv "C:\temp\EmailActivityCount.csv" -NoTypeInformation
