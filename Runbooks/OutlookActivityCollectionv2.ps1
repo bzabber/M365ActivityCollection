@@ -118,7 +118,8 @@ foreach ($tenant in $tenants) {
 
     #Remove special chars from header
     $QueryResults = $QueryResults.Replace('ï»¿Report Refresh Date', 'Report Refresh Date')
-    $QueryResults.Add(@{"Tenant: " = $tenantName })
+    $addTenant = "Tenant: " + $tenantName
+    $QueryResults.Add($addTenant)
     #Convert the stream result to an array
     #Add-Member -InputObject $QueryResults -MemberType NoteProperty -Name "Tenant: " -Value $tenantName
     $resultarray = ConvertFrom-Csv -InputObject $QueryResults
