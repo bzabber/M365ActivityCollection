@@ -128,6 +128,7 @@ foreach ($tenant in $tenants) {
     #$json
     #$json | ConvertTo-Json | set-content $json
     $resultarray
+    Write-Output "Boo"
     #Export result to CSV
     #Write-Host $resultarray
     #$resultarray | Export-Csv "C:\temp\EmailActivityCount.csv" -NoTypeInformation
