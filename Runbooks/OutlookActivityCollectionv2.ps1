@@ -61,7 +61,7 @@ foreach ($tenant in $tenants) {
     $clientID = $tenant.ClientID
     $ClientSecret = $tenant.ClientSecret
     
-    Write-Output " Processing " $tenantName
+    Write-Output " Processing ... " $tenantName
 
 
     # OAuth Token Endpoint
