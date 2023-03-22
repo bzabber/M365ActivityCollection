@@ -122,7 +122,7 @@ foreach ($tenant in $tenants) {
     #Convert the stream result to an array
     #Add-Member -InputObject $QueryResults -MemberType NoteProperty -Name "Tenant: " -Value $tenantName
     $resultarray = ConvertFrom-Csv -InputObject $QueryResults
-    ConvertTo-Json $resultarray
+    #ConvertTo-Json $resultarray
     #$json = Get-Content $resultarray | Out-String | ConvertFrom-Json
     #$json | Add-Member -Type NoteProperty -Name 'Tenant:' -Value $tenantName
     #$json
