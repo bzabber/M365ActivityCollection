@@ -61,7 +61,7 @@ foreach ($tenant in $tenants) {
     $clientID = $tenant.ClientID
     $ClientSecret = $tenant.ClientSecret
     
-    Write-Output " Processing " $tenantName
+    Write-Output " Processing ... " $tenantName
 
 
     # OAuth Token Endpoint
@@ -90,6 +90,7 @@ foreach ($tenant in $tenants) {
      
     # Create an empty array to store the result.
     $QueryResults = @()
+
     # Invoke REST method and fetch data until there are no pages left.
     $requestURI = "https://graph.microsoft.com/v1.0/reports/getEmailActivityCounts(period='D7')"                
     do {
@@ -117,9 +118,17 @@ foreach ($tenant in $tenants) {
 
     #Remove special chars from header
     $QueryResults = $QueryResults.Replace('ï»¿Report Refresh Date', 'Report Refresh Date')
+    $QueryResults.Add(@{"Tenant: " = $tenantName })
     #Convert the stream result to an array
+    #Add-Member -InputObject $QueryResults -MemberType NoteProperty -Name "Tenant: " -Value $tenantName
     $resultarray = ConvertFrom-Csv -InputObject $QueryResults
-    ConvertTo-Json $resultarray
+    #ConvertTo-Json $resultarray
+    #$json = Get-Content $resultarray | Out-String | ConvertFrom-Json
+    #$json | Add-Member -Type NoteProperty -Name 'Tenant:' -Value $tenantName
+    #$json
+    #$json | ConvertTo-Json | set-content $json
+    $resultarray
+    Write-Output "Boo"
     #Export result to CSV
     #Write-Host $resultarray
     #$resultarray | Export-Csv "C:\temp\EmailActivityCount.csv" -NoTypeInformation
