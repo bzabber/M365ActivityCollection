@@ -51,7 +51,7 @@ $tenants = @(
 #Log Analytics components
 $LogAnalyticsWorkspaceID = "6c103a25-8ac4-4421-8a51-03b4c8082eb7" #Get-AzAutomationVariable -Name 'LAWWorkSpaceID'
 $SharedKey = "AhLfQV/YgsSHXEafWJOMuSDTeWRZ2+++ErLzxJ65PBITRme/0Gh8Mk45t/f/hnOY+bvUdwbshzpGOh/S0EBcuA==" #Get-AzAutomationVariable -Name 'LAWPrimaryKey'
-$LogType = "OutlookActivityCollection"
+$LogType = "M365OutlookActivityCollection_CL"
 
 # Function to to create the authorization signature
 Function Build-Signature($customerId, $sharedKey, $date, $contentLength, $method, $contentType, $resource)
@@ -171,12 +171,11 @@ foreach ($tenant in $tenants) {
     $ResultsArray
 
     #Convert to JSON
-    $ResultsJSON = $ResultsArray | ConvertTo-Json
+    $JSON = $ResultsArray | ConvertTo-Json #-AsArray (May need to use this parameter)
 
-    $ResultsJSON
+    $JSON
     
-    Write-Output "Boo"
     #Export result to CSV
     #Write-Host $resultarray
-    Post-LogAnalyticsData -customerId $customerId -sharedKey $sharedKey -body ([System.Text.Encoding]::UTF8.GetBytes($json)) -logType $logType
+    #Post-LogAnalyticsData -customerId $customerId -sharedKey $sharedKey -body ([System.Text.Encoding]::UTF8.GetBytes($JSON)) -logType $logType
 }
