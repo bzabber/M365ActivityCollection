@@ -29,16 +29,16 @@ Use the client secret you create as part of the app registration.
 
 #>
 #./Get-emailActivityUsageRpt.ps1 -TenantID 'tenantId' -ClientID 'clientId' -ClientSecret '********' | Out-File -FilePath Logoutput.txt
-Import-Module MSAL.PS
+#Import-Module MSAL.PS
 #--- Include module to format and send request to OMS ---#
-Import-Module OMSIngestionAPI
+#Import-Module OMSIngestionAPI
 
 $tenants = @(
     [pscustomobject]@{
         TenantName   = "Contoso";
-        TenantID     = Get-AutomationVariable -Name 'M365x87145483TenantID';
-        ClientID     = Get-AutomationVariable -Name 'M365x87145483ClientID';
-        ClientSecret = Get-AutomationVariable -Name 'M365x87145483ClientSecret';
+        TenantID     = "38aa4e2b-120e-426b-b877-29a4fb7be021" #'M365x87145483TenantID';
+        ClientID     = "bf9c660f-45ab-4100-8c5a-10dd1dcebbc8" #Get-AutomationVariable -Name 'M365x87145483ClientID';
+        ClientSecret = "JoF8Q~MIIwBduxqXn4yX4Sh96ZjwLZ-Cf-H7qdpN" #'M365x87145483ClientSecret';
     }<#,
     [pscustomobject]@{
         TenantName   = "SSC";
@@ -80,7 +80,7 @@ foreach ($tenant in $tenants) {
         Invoke-RestMethod -Method Post -Uri $uri -ContentType "application/x-www-form-urlencoded" -Body $body -ErrorAction Stop
     }
     catch [System.Net.WebException] {	
-        Write-Warning "Exception was caught: $($_.Exception.Message)" for $tenantName
+        Write-Warning "Exception was caught: $($_.Exception.Message)" #+ "for "$tenantName
     }
 
     If ($TokenRequest) { $token = $TokenRequest.access_token }
@@ -98,7 +98,7 @@ foreach ($tenant in $tenants) {
             Invoke-RestMethod -Method Get -Uri $requestURI -ContentType "application/json" -Headers @{ Authorization = "Bearer $token" } -ErrorAction Stop
         }
         catch [System.Net.WebException] {
-            Write-Warning "Exception: $($_.Exception.Message)" for $tenantName
+            Write-Warning "Exception: $($_.Exception.Message) for " $tenantName
         }
         if ($Results.value) {
             $QueryResults += $Results.value
@@ -118,17 +118,17 @@ foreach ($tenant in $tenants) {
 
     #Remove special chars from header
     $QueryResults = $QueryResults.Replace('ï»¿Report Refresh Date', 'Report Refresh Date')
-    $addTenant = "Tenant: " + $tenantName
-    $QueryResults.Add($addTenant)
-    #Convert the stream result to an array
-    #Add-Member -InputObject $QueryResults -MemberType NoteProperty -Name "Tenant: " -Value $tenantName
-    $resultarray = ConvertFrom-Csv -InputObject $QueryResults
-    #ConvertTo-Json $resultarray
-    #$json = Get-Content $resultarray | Out-String | ConvertFrom-Json
-    #$json | Add-Member -Type NoteProperty -Name 'Tenant:' -Value $tenantName
-    #$json
-    #$json | ConvertTo-Json | set-content $json
-    $resultarray
+        
+    #Convert the stream result to an array  
+    $ResultsArray = ConvertFrom-Csv -InputObject $QueryResults
+    $ResultsArray | Add-Member -NotePropertyName Tenant -NotePropertyValue $tenantName
+    $ResultsArray
+
+    #Convert to JSON
+    $ResultsJSON = $ResultsArray | ConvertTo-Json
+
+    $ResultsJSON
+    
     Write-Output "Boo"
     #Export result to CSV
     #Write-Host $resultarray
