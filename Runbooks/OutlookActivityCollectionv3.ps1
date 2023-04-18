@@ -6,6 +6,8 @@ Prerequisite https://docs.microsoft.com/en-us/graph/auth-register-app-v2?context
 Below application permission is required:
 Reports.Read.All
 
+DCE and DCRs must be created prior. 
+
 #NOTE - Disclaimer
 #Following programming examples is for illustration only, without warranty either expressed or implied,
 #including, but not limited to, the implied warranties of merchantability and/or fitness for a particular purpose. 
@@ -29,22 +31,21 @@ Use the client secret you create as part of the app registration.
 
 #>
 #./Get-emailActivityUsageRpt.ps1 -TenantID 'tenantId' -ClientID 'clientId' -ClientSecret '********' | Out-File -FilePath Logoutput.txt
-#Import-Module MSAL.PS
-#--- Include module to format and send request to OMS ---#
-#Import-Module OMSIngestionAPI
+
+#Assembly required to create bearer token to connect to DCE.
 Add-Type -AssemblyName System.Web
 
 ### Step 0: Set variables required for the rest of the script.
 
-# information needed to authenticate to AAD and obtain a bearer token
-$tenantId = "b9e8fd52-6d6e-4bd9-b191-c776fb921da4" #Tenant ID the data collection endpoint resides in
-$appId = "934a0104-d421-4c89-b8bb-c66ede05c932" #Application ID created and granted permissions
-$appSecret = "wGI8Q~BG_rV1UjCMekhBbLfihUQUFU3Qeq6K~aB~" #Secret created for the application
+# information needed to authenticate to AAD and obtain a bearer token so that data can be logged ot Log Analytics.
+$tenantId = Get-AutomationVariable -Name'AzMonLAWTenantID' #Tenant ID the data collection endpoint resides in
+$appId = Get-AutomationVariable -Name'DCEAppID' #Application ID created and granted permissions to the DCR/DCE
+$appSecret = Get-AutomationVariable -Name 'DCEAppSecret' #Secret created for the appId.
 
 # information needed to send data to the DCR endpoint
-$dceEndpoint = "https://m365datacollection-ep-h5wz.canadacentral-1.ingest.monitor.azure.com" #the endpoint property of the Data Collection Endpoint object
-$dcrImmutableId = "dcr-752fab2113b141baa82581cf7faa6064" #the immutableId property of the DCR object
-$streamName = "Custom-M365OutlookActivityCollection_CL" #name of the stream in the DCR that represents the destination table
+$dceEndpoint = "" #the endpoint property of the Data Collection Endpoint object
+$dcrImmutableId = "" #the immutableId property of the DCR object
+$streamName = "" #name of the stream in the DCR that represents the destination table
 
 ### Step 1: Obtain a bearer token used later to authenticate against the DCE.
 try {
@@ -65,6 +66,7 @@ catch [System.Net.WebException] {
 
 $bearerToken = (Invoke-RestMethod -Uri $uri -Method "Post" -Body $body -Headers $headers).access_token
 
+### Step 2: Connect to M365 tenants to collect Outlook Activity Reports from.
 $tenants = @(
     [pscustomobject]@{
         TenantName   = "Contoso";
@@ -139,7 +141,7 @@ foreach ($tenant in $tenants) {
                                                                                                 
     } until (!($requestURI))
                                             
-    # Return the results
+    ### Step 3: Return the results, clean up headers and convert from CSV to JSON.
 
     #$QueryResults
     
@@ -157,15 +159,16 @@ foreach ($tenant in $tenants) {
     $ResultsArray | Add-Member -NotePropertyName TimeGenerated -NotePropertyValue $UTCDateTime
     #$ResultsArray
 
-    
-
     #Convert to JSON
     Write-Output "Converting to JSON..."
     $JSON = ConvertTo-Json -InputObject $ResultsArray -Depth 10
 
+    ## Can be used to create the table schema for the custom Log Analytics custom table.
     #$JSON | Set-Content M365OutlookActivityCollection.json
     #$JSON
-    #Post to Log Analytics
+    
+    ### Step 4. Post to Log Analytics
+    
     try {
         Write-Output "Posting to Log Analytics Workspace ..."
         $body = $JSON;
