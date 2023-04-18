@@ -6,7 +6,11 @@ Prerequisite https://docs.microsoft.com/en-us/graph/auth-register-app-v2?context
 Below application permission is required:
 Reports.Read.All
 
-DCE and DCRs must be created prior. 
+DCE and DCRs must be created prior.
+
+Custom table must also be created in a Log Analytics workspace.
+
+SPN and secret must also be created in AAD so that the runbook can be authorized to send data to the DCE.
 
 #NOTE - Disclaimer
 #Following programming examples is for illustration only, without warranty either expressed or implied,
@@ -43,9 +47,9 @@ $appId = Get-AutomationVariable -Name'DCEAppID' #Application ID created and gran
 $appSecret = Get-AutomationVariable -Name 'DCEAppSecret' #Secret created for the appId.
 
 # information needed to send data to the DCR endpoint
-$dceEndpoint = "" #the endpoint property of the Data Collection Endpoint object
-$dcrImmutableId = "" #the immutableId property of the DCR object
-$streamName = "" #name of the stream in the DCR that represents the destination table
+$dceEndpoint = Get-AutomationVariable -Name 'DCEEndpoint' #the endpoint property of the Data Collection Endpoint object
+$dcrImmutableId = Get-AutomationVariable -Name 'DCRImutableID' #the immutableId property of the DCR object
+$streamName = Get-AutomationVariable -Name 'StreamName' #name of the stream in the DCR that represents the destination table
 
 ### Step 1: Obtain a bearer token used later to authenticate against the DCE.
 try {
