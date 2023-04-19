@@ -45,6 +45,7 @@ Add-Type -AssemblyName System.Web
 $tenantId = Get-AutomationVariable -Name'AzMonLAWTenantID' #Tenant ID the data collection endpoint resides in
 $appId = Get-AutomationVariable -Name'DCEAppID' #Application ID created and granted permissions to the DCR/DCE
 $appSecret = Get-AutomationVariable -Name 'DCEAppSecret' #Secret created for the appId.
+$dcrUserAssignedID = "c611ebb0-61b3-4033-9eca-06e6f183fd89" #The UserAssigned Identity ObjectID assigned to the Runbook that has permission to write to the DCR.
 
 # information needed to send data to the DCR endpoint
 $dceEndpoint = Get-AutomationVariable -Name 'DCEEndpoint' #the endpoint property of the Data Collection Endpoint object
@@ -52,6 +53,7 @@ $dcrImmutableId = Get-AutomationVariable -Name 'DCRImutableID' #the immutableId 
 $streamName = Get-AutomationVariable -Name 'StreamName' #name of the stream in the DCR that represents the destination table
 
 ### Step 1: Obtain a bearer token used later to authenticate against the DCE.
+<#
 try {
     Write-Output "Building token for DCE Endpoint."
     $scope = [System.Web.HttpUtility]::UrlEncode("https://monitor.azure.com//.default")   
@@ -69,6 +71,13 @@ catch [System.Net.WebException] {
 
 
 $bearerToken = (Invoke-RestMethod -Uri $uri -Method "Post" -Body $body -Headers $headers).access_token
+#>
+
+$scope = [System.Web.HttpUtility]::UrlEncode("https://monitor.azure.com")
+$object_id = $dcrUserAssignedID # User Assigned MI object ID (principal ID)
+$uri = "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=$scope&object_id=$object_id"
+$response = $(Invoke-WebRequest -Uri $uri -Headers @{Metadata = "true" }) | ConvertFrom-Json
+$response.access_token
 
 ### Step 2: Connect to M365 tenants to collect Outlook Activity Reports from.
 $tenants = @(
@@ -176,7 +185,8 @@ foreach ($tenant in $tenants) {
     try {
         Write-Output "Posting to Log Analytics Workspace ..."
         $body = $JSON;
-        $headers = @{"Authorization" = "Bearer $bearerToken"; "Content-Type" = "application/json"};
+        $headers = @{"Authorization" = "Bearer $response.access_token"; "Content-Type" = "application/json" };
+        #$headers = @{"Authorization" = "Bearer $bearerToken"; "Content-Type" = "application/json"};
         $uri = "$dceEndpoint/dataCollectionRules/$dcrImmutableId/streams/$($streamName)?api-version=2021-11-01-preview"
         $uploadResponse = Invoke-RestMethod -Uri $uri -Method "Post" -Body $body -Headers $headers
         Write-Output "Upload to Log Analytics workspace SUCCESSFUL"
